@@ -1,17 +1,17 @@
 /* ========================================
-   Variables CSS
+    Variables CSS
    ======================================== */
 :root {
     /* Colores Light Mode */
     --color-primary: #6366f1;
-    --color-primary-dark: #4f46e5;
+    --color-primary-dark: #6874d4;
     --color-success: #10b981;
     --color-danger: #ef4444;
     --color-warning: #f59e0b;
     
     --color-bg: #ffffff;
     --color-bg-secondary: #f9fafb;
-    --color-bg-tertiary: #f3f4f6;
+    --color-bg-tertiary: #d4d4d4;
     --color-text: #111827;
     --color-text-secondary: #6b7280;
     --color-border: #e5e7eb;
@@ -56,7 +56,7 @@
 }
 
 /* ========================================
-   Reset y estilos base
+    Reset y estilos base
    ======================================== */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -82,7 +82,7 @@ body {
 }
 
 /* ========================================
-   Componentes reutilizables
+    Componentes reutilizables
    ======================================== */
 .container {
     width: 100%;
@@ -140,7 +140,7 @@ body {
 }
 
 /* ========================================
-   Header
+    Header
    ======================================== */
 .header {
     background-color: var(--color-bg-secondary);
@@ -195,7 +195,7 @@ body {
 }
 
 /* ========================================
-   Main
+    Main
    ======================================== */
 .main {
     flex: 1;
@@ -203,7 +203,7 @@ body {
 }
 
 /* ========================================
-   Estadísticas
+    Estadísticas
    ======================================== */
 .stats {
     margin-bottom: var(--spacing-2xl);
@@ -245,7 +245,7 @@ body {
 }
 
 /* ========================================
-   Formulario
+    Formulario
    ======================================== */
 .add-book {
     background-color: var(--color-bg-secondary);
@@ -298,7 +298,7 @@ body {
 }
 
 /* ========================================
-   Filtros
+    Filtros
    ======================================== */
 .filters {
     margin-bottom: var(--spacing-xl);
@@ -334,7 +334,7 @@ body {
 }
 
 /* ========================================
-   Lista de libros
+    Lista de libros
    ======================================== */
 .books {
     margin-bottom: var(--spacing-2xl);
@@ -449,7 +449,7 @@ body {
 }
 
 /* ========================================
-   Footer
+    Footer
    ======================================== */
 .footer {
     background-color: var(--color-bg-secondary);
@@ -465,7 +465,7 @@ body {
 }
 
 /* ========================================
-   Media Queries - Responsive
+    Media Queries - Responsive
    ======================================== */
 @media (min-width: 640px) {
     .stats__grid {
@@ -508,7 +508,7 @@ body {
 }
 
 /* ========================================
-   Animaciones
+    Animaciones
    ======================================== */
 @keyframes fadeIn {
     from {

@@ -1,5 +1,5 @@
 /* ========================================
-   Constantes y configuración
+    Constantes y configuración
    ======================================== */
 const STORAGE_KEYS = {
     BOOKS: 'library_books',
@@ -18,7 +18,7 @@ const GENRE_LABELS = {
 };
 
 /* ========================================
-   Estado de la aplicación
+    Estado de la aplicación
    ======================================== */
 const appState = {
     books: [],
@@ -27,7 +27,7 @@ const appState = {
 };
 
 /* ========================================
-   Elementos del DOM
+    Elementos del DOM
    ======================================== */
 const elements = {
     themeToggle: document.getElementById('themeToggle'),
@@ -45,7 +45,7 @@ const elements = {
 };
 
 /* ========================================
-   Funciones de LocalStorage
+    Funciones de LocalStorage
    ======================================== */
 
 /**
@@ -77,7 +77,7 @@ function getFromStorage(key) {
 }
 
 /* ========================================
-   Funciones de gestión de libros
+    Funciones de gestión de libros
    ======================================== */
 
 /**
@@ -155,7 +155,7 @@ function getFilteredBooks() {
 }
 
 /* ========================================
-   Funciones de renderizado
+    Funciones de renderizado
    ======================================== */
 
 /**
@@ -190,7 +190,7 @@ function createBookCardHTML(book) {
                     class="btn btn--danger" 
                     data-action="delete"
                     aria-label="Eliminar ${escapeHTML(book.title)}">
-                    🗑️ Eliminar
+                    Eliminar
                 </button>
             </div>
         </article>
@@ -236,7 +236,7 @@ function updateUI() {
 }
 
 /* ========================================
-   Funciones de utilidad
+    Funciones de utilidad
    ======================================== */
 
 /**
@@ -270,7 +270,7 @@ function resetForm() {
 }
 
 /* ========================================
-   Funciones de tema
+    Funciones de tema
    ======================================== */
 
 /**
@@ -293,7 +293,7 @@ function toggleTheme() {
 }
 
 /* ========================================
-   Funciones de filtrado
+    Funciones de filtrado
    ======================================== */
 
 /**
