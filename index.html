@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestor de biblioteca personal para organizar tus libros pendientes y leídos">
+    <title>Mi Biblioteca Personal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header principal con navegación y toggle de tema -->
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <h1 class="header__title">
+                    <span class="header__icon" aria-hidden="true">📚</span>
+                    Mi Biblioteca
+                </h1>
+                <button 
+                    class="theme-toggle" 
+                    id="themeToggle" 
+                    aria-label="Cambiar tema de color"
+                    type="button">
+                    <span class="theme-toggle__icon" id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="main">
+        <div class="container">
+            <!-- Sección de estadísticas -->
+            <section class="stats" aria-label="Estadísticas de lectura">
+                <div class="stats__grid">
+                    <article class="stat-card">
+                        <h2 class="stat-card__title">Total de libros</h2>
+                        <p class="stat-card__value" id="totalBooks">0</p>
+                    </article>
+                    <article class="stat-card">
+                        <h2 class="stat-card__title">Leídos</h2>
+                        <p class="stat-card__value" id="readBooks">0</p>
+                    </article>
+                    <article class="stat-card">
+                        <h2 class="stat-card__title">Pendientes</h2>
+                        <p class="stat-card__value" id="pendingBooks">0</p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Sección de formulario para agregar libros -->
+            <section class="add-book" aria-labelledby="addBookTitle">
+                <h2 class="section-title" id="addBookTitle">Agregar nuevo libro</h2>
+                <form class="book-form" id="bookForm" novalidate>
+                    <div class="form-group">
+                        <label for="bookTitle" class="form-label">Título del libro</label>
+                        <input 
+                            type="text" 
+                            id="bookTitle" 
+                            class="form-input" 
+                            placeholder="Ej: El nombre del viento"
+                            required
+                            aria-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookAuthor" class="form-label">Autor</label>
+                        <input 
+                            type="text" 
+                            id="bookAuthor" 
+                            class="form-input" 
+                            placeholder="Ej: Patrick Rothfuss"
+                            required
+                            aria-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookGenre" class="form-label">Género</label>
+                        <select id="bookGenre" class="form-select" required aria-required="true">
+                            <option value="">Seleccionar género</option>
+                            <option value="fiction">Ficción</option>
+                            <option value="non-fiction">No ficción</option>
+                            <option value="fantasy">Fantasía</option>
+                            <option value="science-fiction">Ciencia ficción</option>
+                            <option value="mystery">Misterio</option>
+                            <option value="biography">Biografía</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn--primary">
+                        <span aria-hidden="true">+</span> Agregar libro
+                    </button>
+                </form>
+            </section>
+
+            <!-- Sección de filtros -->
+            <section class="filters" aria-label="Filtros de biblioteca">
+                <div class="filters__wrapper">
+                    <button 
+                        class="filter-btn filter-btn--active" 
+                        data-filter="all"
+                        type="button">
+                        Todos
+                    </button>
+                    <button 
+                        class="filter-btn" 
+                        data-filter="pending"
+                        type="button">
+                        Pendientes
+                    </button>
+                    <button 
+                        class="filter-btn" 
+                        data-filter="read"
+                        type="button">
+                        Leídos
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sección de lista de libros -->
+            <section class="books" aria-labelledby="booksTitle">
+                <h2 class="section-title" id="booksTitle">Mi colección</h2>
+                <div class="books__list" id="booksList" role="list">
+                    <!-- Los libros se renderizan dinámicamente aquí -->
+                </div>
+                <div class="empty-state" id="emptyState">
+                    <p class="empty-state__text">No hay libros en tu biblioteca aún.</p>
+                    <p class="empty-state__hint">Agrega tu primer libro usando el formulario de arriba.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer__text">
+                Proyecto de demostración de HTML, CSS y JavaScript
+            </p>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
