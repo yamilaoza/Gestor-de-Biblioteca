@@ -3,15 +3,15 @@
    ======================================== */
 :root {
     /* Colores Light Mode */
-    --color-primary: #6366f1;
-    --color-primary-dark: #6874d4;
+    --color-primary: #a380a2;
+    --color-primary-dark: #c493b0;
     --color-success: #10b981;
     --color-danger: #ef4444;
     --color-warning: #f59e0b;
     
     --color-bg: #ffffff;
     --color-bg-secondary: #f9fafb;
-    --color-bg-tertiary: #d4d4d4;
+    --color-bg-tertiary: #c493b0;
     --color-text: #111827;
     --color-text-secondary: #6b7280;
     --color-border: #e5e7eb;
@@ -46,9 +46,9 @@
 
 /* Dark Mode Variables */
 [data-theme="dark"] {
-    --color-bg: #111827;
-    --color-bg-secondary: #1f2937;
-    --color-bg-tertiary: #374151;
+    --color-bg: #2e2f39e4;
+    --color-bg-secondary: rgba(67, 78, 96, 0.671);
+    --color-bg-tertiary: #c493b0;
     --color-text: #f9fafb;
     --color-text-secondary: #d1d5db;
     --color-border: #374151;
@@ -331,7 +331,6 @@ body {
     background-color: var(--color-primary);
     color: rgb(255, 255, 255);
     border-color: var(--color-primary);
-    text-decoration-color: var(--color-primary);
 }
 
 /* ========================================
