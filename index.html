@@ -46,9 +46,45 @@
                 </div>
             </section>
 
-            <!-- Sección de formulario para agregar libros -->
+        <!-- Sección de búsqueda -->
+            <section class="search" aria-label="Buscador de libros">
+                <div class="search__wrapper">
+                <div class="search__controls">
+                <div class="search__input-group">
+                    <label for="searchInput" class="search__label">Buscar libros</label>
+                    <div class="search__input-container">
+                        <input 
+                            type="search" 
+                            id="searchInput" 
+                            class="search__input" 
+                            placeholder="Escribe para buscar..."
+                            aria-label="Buscar libros">
+                        <button type="button" class="btn btn--primary search__btn" id="searchBtn">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+                <div class="search__filters">
+                    <label class="search__filter-option">
+                        <input type="checkbox" id="searchByTitle" checked>
+                        <span>Título</span>
+                    </label>
+                    <label class="search__filter-option">
+                        <input type="checkbox" id="searchByAuthor" checked>
+                        <span>Autor</span>
+                    </label>
+                    <label class="search__filter-option">
+                        <input type="checkbox" id="searchByGenre" checked>
+                        <span>Género</span>
+                    </label>
+                </div>
+                </div>
+                </div>
+            </section>
+        
+        <!-- Sección de formulario para agregar libros -->
             <section class="add-book" aria-labelledby="addBookTitle">
-                <h2 class="section-title" id="addBookTitle">Agregar nuevo libro</h2>
+                <h2 class="section-title" id="addBookTitle">
                 <form class="book-form" id="bookForm" novalidate>
                     <div class="form-group">
                         <label for="bookTitle" class="form-label">Título del libro</label>

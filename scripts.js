@@ -1,10 +1,12 @@
 /* ========================================
-    Constantes y configuración
+   Constantes y configuración
    ======================================== */
 const STORAGE_KEYS = {
     BOOKS: 'library_books',
     THEME: 'library_theme',
-    FILTER: 'library_filter'
+    FILTER: 'library_filter',
+    SEARCH: 'library_search',
+    SEARCH_OPTIONS: 'library_search_options'
 };
 
 const GENRE_LABELS = {
@@ -18,16 +20,22 @@ const GENRE_LABELS = {
 };
 
 /* ========================================
-    Estado de la aplicación
+   Estado de la aplicación
    ======================================== */
 const appState = {
     books: [],
     currentFilter: 'all',
-    theme: 'light'
+    theme: 'light',
+    searchQuery: '',
+    searchOptions: {
+        byTitle: true,
+        byAuthor: true,
+        byGenre: true
+    }
 };
 
 /* ========================================
-    Elementos del DOM
+   Elementos del DOM
    ======================================== */
 const elements = {
     themeToggle: document.getElementById('themeToggle'),
@@ -41,11 +49,17 @@ const elements = {
     totalBooks: document.getElementById('totalBooks'),
     readBooks: document.getElementById('readBooks'),
     pendingBooks: document.getElementById('pendingBooks'),
-    filterButtons: document.querySelectorAll('.filter-btn')
+    filterButtons: document.querySelectorAll('.filter-btn'),
+    searchInput: document.getElementById('searchInput'),
+    searchBtn: document.getElementById('searchBtn'),
+    clearSearchBtn: document.getElementById('clearSearchBtn'),
+    searchByTitle: document.getElementById('searchByTitle'),
+    searchByAuthor: document.getElementById('searchByAuthor'),
+    searchByGenre: document.getElementById('searchByGenre')
 };
 
 /* ========================================
-    Funciones de LocalStorage
+   Funciones de LocalStorage
    ======================================== */
 
 /**
@@ -77,7 +91,7 @@ function getFromStorage(key) {
 }
 
 /* ========================================
-    Funciones de gestión de libros
+   Funciones de gestión de libros
    ======================================== */
 
 /**
@@ -102,6 +116,8 @@ function createBook(title, author, genre) {
         author: author.trim(),
         genre: genre,
         isRead: false,
+        rating: 0,
+        comment: '',
         createdAt: new Date().toISOString()
     };
 }
@@ -140,22 +156,69 @@ function toggleBookRead(bookId) {
 }
 
 /**
- * Obtiene los libros filtrados según el filtro activo
- * @returns {Array} Array de libros filtrados
+ * Actualiza la calificación y comentario de un libro
+ * @param {string} bookId - ID del libro
+ * @param {number} rating - Calificación (1-5)
+ * @param {string} comment - Comentario
  */
-function getFilteredBooks() {
-    switch (appState.currentFilter) {
-        case 'read':
-            return appState.books.filter(book => book.isRead);
-        case 'pending':
-            return appState.books.filter(book => !book.isRead);
-        default:
-            return appState.books;
+function updateBookReview(bookId, rating, comment) {
+    const book = appState.books.find(b => b.id === bookId);
+    if (book) {
+        book.rating = rating;
+        book.comment = comment.trim();
+        saveToStorage(STORAGE_KEYS.BOOKS, appState.books);
+        updateUI();
     }
 }
 
+/**
+ * Genera las estrellas para mostrar la calificación
+ * @param {number} rating - Calificación (0-5)
+ * @returns {string} String con estrellas
+ */
+function generateStars(rating) {
+    const fullStar = '★';
+    const emptyStar = '☆';
+    return fullStar.repeat(rating) + emptyStar.repeat(5 - rating);
+}
+
+/**
+ * Obtiene los libros filtrados según el filtro activo y búsqueda
+ * @returns {Array} Array de libros filtrados
+ */
+function getFilteredBooks() {
+    let filtered = appState.books;
+    
+    // Aplicar filtro por estado (todos/leídos/pendientes)
+    switch (appState.currentFilter) {
+        case 'read':
+            filtered = filtered.filter(book => book.isRead);
+            break;
+        case 'pending':
+            filtered = filtered.filter(book => !book.isRead);
+            break;
+    }
+    
+    // Aplicar búsqueda si hay query
+    if (appState.searchQuery.trim().length > 0) {
+        const query = appState.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(book => {
+            const matchTitle = appState.searchOptions.byTitle && 
+                              book.title.toLowerCase().includes(query);
+            const matchAuthor = appState.searchOptions.byAuthor && 
+                               book.author.toLowerCase().includes(query);
+            const matchGenre = appState.searchOptions.byGenre && 
+                              GENRE_LABELS[book.genre].toLowerCase().includes(query);
+            
+            return matchTitle || matchAuthor || matchGenre;
+        });
+    }
+    
+    return filtered;
+}
+
 /* ========================================
-    Funciones de renderizado
+   Funciones de renderizado
    ======================================== */
 
 /**
@@ -167,6 +230,21 @@ function createBookCardHTML(book) {
     const genreLabel = GENRE_LABELS[book.genre] || book.genre;
     const readClass = book.isRead ? 'book-card--read' : '';
     
+    // Generar sección de rating y comentario si el libro está leído
+    const reviewSection = book.isRead ? `
+        ${book.rating > 0 ? `
+            <div class="book-card__rating">
+                <span class="book-card__stars">${generateStars(book.rating)}</span>
+                <span>(${book.rating}/5)</span>
+            </div>
+        ` : ''}
+        ${book.comment ? `
+            <div class="book-card__comment">
+                "${escapeHTML(book.comment)}"
+            </div>
+        ` : ''}
+    ` : '';
+    
     return `
         <article class="book-card ${readClass}" role="listitem" data-book-id="${book.id}">
             <div class="book-card__header">
@@ -174,6 +252,7 @@ function createBookCardHTML(book) {
                     <h3 class="book-card__title">${escapeHTML(book.title)}</h3>
                     <p class="book-card__author">por ${escapeHTML(book.author)}</p>
                     <span class="book-card__genre">${genreLabel}</span>
+                    ${reviewSection}
                 </div>
             </div>
             <div class="book-card__actions">
@@ -186,8 +265,16 @@ function createBookCardHTML(book) {
                         aria-label="Marcar como ${book.isRead ? 'no leído' : 'leído'}">
                     <span class="checkbox-label">${book.isRead ? 'Leído' : 'Marcar como leído'}</span>
                 </label>
+                ${book.isRead ? `
+                    <button 
+                        class="btn btn--primary btn--small" 
+                        data-action="review"
+                        aria-label="Agregar reseña a ${escapeHTML(book.title)}">
+                        Reseña
+                    </button>
+                ` : ''}
                 <button 
-                    class="btn btn--danger" 
+                    class="btn btn--danger btn--small" 
                     data-action="delete"
                     aria-label="Eliminar ${escapeHTML(book.title)}">
                     Eliminar
@@ -236,7 +323,7 @@ function updateUI() {
 }
 
 /* ========================================
-    Funciones de utilidad
+   Funciones de utilidad
    ======================================== */
 
 /**
@@ -270,7 +357,7 @@ function resetForm() {
 }
 
 /* ========================================
-    Funciones de tema
+   Funciones de tema
    ======================================== */
 
 /**
@@ -293,7 +380,7 @@ function toggleTheme() {
 }
 
 /* ========================================
-    Funciones de filtrado
+   Funciones de filtrado
    ======================================== */
 
 /**
@@ -304,123 +391,331 @@ function setFilter(filter) {
     appState.currentFilter = filter;
     saveToStorage(STORAGE_KEYS.FILTER, filter);
     
-    //Actualizar botones de filtro
-elements.filterButtons.forEach(btn => {
-if (btn.dataset.filter === filter) {
-btn.classList.add('filter-btn--active');
-} else {
-btn.classList.remove('filter-btn--active');
+    // Actualizar botones de filtro
+    elements.filterButtons.forEach(btn => {
+        if (btn.dataset.filter === filter) {
+            btn.classList.add('filter-btn--active');
+        } else {
+            btn.classList.remove('filter-btn--active');
+        }
+    });
+    
+    updateUI();
 }
-});
-updateUI();
-}
-/* ========================================
-Event Handlers
-======================================== */
-/**
 
-Maneja el envío del formulario
-@param {Event} e - Evento de submit
-*/
+/* ========================================
+   Funciones de búsqueda
+   ======================================== */
+
+/**
+ * Actualiza la búsqueda
+ * @param {string} query - Término de búsqueda
+ */
+function setSearch(query) {
+    appState.searchQuery = query;
+    saveToStorage(STORAGE_KEYS.SEARCH, query);
+    updateUI();
+}
+
+/**
+ * Ejecuta la búsqueda
+ */
+function performSearch() {
+    const query = elements.searchInput.value;
+    setSearch(query);
+}
+
+/**
+ * Limpia la búsqueda
+ */
+function clearSearch() {
+    elements.searchInput.value = '';
+    setSearch('');
+    elements.searchInput.focus();
+}
+
+/**
+ * Maneja el input de búsqueda (Enter key)
+ * @param {Event} e - Evento de keypress
+ */
+function handleSearchKeyPress(e) {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+}
+
+/**
+ * Actualiza las opciones de búsqueda
+ */
+function updateSearchOptions() {
+    appState.searchOptions = {
+        byTitle: elements.searchByTitle.checked,
+        byAuthor: elements.searchByAuthor.checked,
+        byGenre: elements.searchByGenre.checked
+    };
+    saveToStorage(STORAGE_KEYS.SEARCH_OPTIONS, appState.searchOptions);
+    
+    // Si hay búsqueda activa, actualizar resultados
+    if (appState.searchQuery.trim().length > 0) {
+        updateUI();
+    }
+}
+
+/**
+ * Maneja cambios en los checkboxes de búsqueda
+ */
+function handleSearchOptionChange() {
+    updateSearchOptions();
+}
+
+/* ========================================
+   Funciones de modal de reseña
+   ======================================== */
+
+/**
+ * Crea y muestra el modal de reseña
+ * @param {string} bookId - ID del libro
+ */
+function showReviewModal(bookId) {
+    const book = appState.books.find(b => b.id === bookId);
+    if (!book) return;
+    
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.className = 'modal modal--active';
+    modal.innerHTML = `
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2 class="modal__title">Reseña: ${escapeHTML(book.title)}</h2>
+                <button class="modal__close" aria-label="Cerrar modal">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="form-group">
+                    <label class="form-label">Calificación</label>
+                    <div class="rating-input" id="ratingInput">
+                        ${[1, 2, 3, 4, 5].map(star => `
+                            <button 
+                                type="button" 
+                                class="star-btn ${star <= book.rating ? 'star-btn--active' : ''}" 
+                                data-rating="${star}"
+                                aria-label="${star} estrellas">
+                                ${star <= book.rating ? '★' : '☆'}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reviewComment" class="form-label">Comentario</label>
+                    <textarea 
+                        id="reviewComment" 
+                        class="form-textarea" 
+                        placeholder="Escribe tus impresiones sobre este libro...">${escapeHTML(book.comment || '')}</textarea>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--secondary" id="cancelReview">Cancelar</button>
+                <button class="btn btn--primary" id="saveReview">Guardar</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Variables para el rating
+    let selectedRating = book.rating;
+    
+    // Event listeners del modal
+    const ratingButtons = modal.querySelectorAll('.star-btn');
+    const commentTextarea = modal.querySelector('#reviewComment');
+    const saveBtn = modal.querySelector('#saveReview');
+    const cancelBtn = modal.querySelector('#cancelReview');
+    const closeBtn = modal.querySelector('.modal__close');
+    
+    // Manejar clicks en estrellas
+    ratingButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedRating = parseInt(btn.dataset.rating);
+            ratingButtons.forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.classList.add('star-btn--active');
+                    star.textContent = '★';
+                } else {
+                    star.classList.remove('star-btn--active');
+                    star.textContent = '☆';
+                }
+            });
+        });
+    });
+    
+    // Guardar reseña
+    saveBtn.addEventListener('click', () => {
+        updateBookReview(bookId, selectedRating, commentTextarea.value);
+        closeModal(modal);
+    });
+    
+    // Cancelar
+    cancelBtn.addEventListener('click', () => closeModal(modal));
+    closeBtn.addEventListener('click', () => closeModal(modal));
+    
+    // Cerrar al hacer click fuera del modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal(modal);
+        }
+    });
+}
+
+/**
+ * Cierra y elimina un modal
+ * @param {HTMLElement} modal - Elemento del modal
+ */
+function closeModal(modal) {
+    modal.classList.remove('modal--active');
+    setTimeout(() => modal.remove(), 300);
+}
+
+/* ========================================
+   Event Handlers
+   ======================================== */
+
+/**
+ * Maneja el envío del formulario
+ * @param {Event} e - Evento de submit
+ */
 function handleFormSubmit(e) {
-e.preventDefault();
-if (!validateForm()) {
-return;
-}
-const newBook = createBook(
-elements.bookTitle.value,
-elements.bookAuthor.value,
-elements.bookGenre.value
-);
-addBook(newBook);
-resetForm();
-elements.bookTitle.focus();
+    e.preventDefault();
+    
+    if (!validateForm()) {
+        return;
+    }
+    
+    const newBook = createBook(
+        elements.bookTitle.value,
+        elements.bookAuthor.value,
+        elements.bookGenre.value
+    );
+    
+    addBook(newBook);
+    resetForm();
+    elements.bookTitle.focus();
 }
 
 /**
-
-Maneja los clics en la lista de libros
-@param {Event} e - Evento de click
-*/
+ * Maneja los clics en la lista de libros
+ * @param {Event} e - Evento de click
+ */
 function handleBooksListClick(e) {
-const bookCard = e.target.closest('.book-card');
-if (!bookCard) return;
-const bookId = bookCard.dataset.bookId;
-const action = e.target.dataset.action;
-if (action === 'delete') {
-deleteBook(bookId);
-} else if (action === 'toggle-read') {
-toggleBookRead(bookId);
-}
+    const bookCard = e.target.closest('.book-card');
+    if (!bookCard) return;
+    
+    const bookId = bookCard.dataset.bookId;
+    const action = e.target.dataset.action;
+    
+    if (action === 'delete') {
+        deleteBook(bookId);
+    } else if (action === 'toggle-read') {
+        toggleBookRead(bookId);
+    } else if (action === 'review') {
+        showReviewModal(bookId);
+    }
 }
 
 /**
-
-Maneja los clics en los botones de filtro
-@param {Event} e - Evento de click
-*/
+ * Maneja los clics en los botones de filtro
+ * @param {Event} e - Evento de click
+ */
 function handleFilterClick(e) {
-const filterBtn = e.target.closest('.filter-btn');
-if (!filterBtn) return;
-const filter = filterBtn.dataset.filter;
-setFilter(filter);
+    const filterBtn = e.target.closest('.filter-btn');
+    if (!filterBtn) return;
+    
+    const filter = filterBtn.dataset.filter;
+    setFilter(filter);
 }
 
 /* ========================================
-Inicialización
-======================================== */
-/**
+   Inicialización
+   ======================================== */
 
-Carga el estado inicial desde localStorage
-*/
+/**
+ * Carga el estado inicial desde localStorage
+ */
 function loadInitialState() {
-// Cargar libros
-const savedBooks = getFromStorage(STORAGE_KEYS.BOOKS);
-if (savedBooks && Array.isArray(savedBooks)) {
-appState.books = savedBooks;
-}
-// Cargar tema
-const savedTheme = getFromStorage(STORAGE_KEYS.THEME);
-if (savedTheme) {
-applyTheme(savedTheme);
-}
-// Cargar filtro
-const savedFilter = getFromStorage(STORAGE_KEYS.FILTER);
-if (savedFilter) {
-setFilter(savedFilter);
-}
+    // Cargar libros
+    const savedBooks = getFromStorage(STORAGE_KEYS.BOOKS);
+    if (savedBooks && Array.isArray(savedBooks)) {
+        appState.books = savedBooks;
+    }
+    
+    // Cargar tema
+    const savedTheme = getFromStorage(STORAGE_KEYS.THEME);
+    if (savedTheme) {
+        applyTheme(savedTheme);
+    }
+    
+    // Cargar filtro
+    const savedFilter = getFromStorage(STORAGE_KEYS.FILTER);
+    if (savedFilter) {
+        setFilter(savedFilter);
+    }
+    
+    // Cargar búsqueda
+    const savedSearch = getFromStorage(STORAGE_KEYS.SEARCH);
+    if (savedSearch) {
+        appState.searchQuery = savedSearch;
+        elements.searchInput.value = savedSearch;
+    }
+    
+    // Cargar opciones de búsqueda
+    const savedSearchOptions = getFromStorage(STORAGE_KEYS.SEARCH_OPTIONS);
+    if (savedSearchOptions) {
+        appState.searchOptions = savedSearchOptions;
+        elements.searchByTitle.checked = savedSearchOptions.byTitle;
+        elements.searchByAuthor.checked = savedSearchOptions.byAuthor;
+        elements.searchByGenre.checked = savedSearchOptions.byGenre;
+    }
 }
 
 /**
-
-Registra todos los event listeners
-*/
+ * Registra todos los event listeners
+ */
 function registerEventListeners() {
-// Formulario
-elements.bookForm.addEventListener('submit', handleFormSubmit);
-// Toggle de tema
-elements.themeToggle.addEventListener('click', toggleTheme);
-// Lista de libros (delegación de eventos)
-elements.booksList.addEventListener('click', handleBooksListClick);
-// Botones de filtro
-elements.filterButtons.forEach(btn => {
-btn.addEventListener('click', handleFilterClick);
-});
+    // Formulario
+    elements.bookForm.addEventListener('submit', handleFormSubmit);
+    
+    // Toggle de tema
+    elements.themeToggle.addEventListener('click', toggleTheme);
+    
+    // Lista de libros (delegación de eventos)
+    elements.booksList.addEventListener('click', handleBooksListClick);
+    
+    // Botones de filtro
+    elements.filterButtons.forEach(btn => {
+        btn.addEventListener('click', handleFilterClick);
+    });
+    
+    // Búsqueda
+    elements.searchBtn.addEventListener('click', performSearch);
+    elements.clearSearchBtn.addEventListener('click', clearSearch);
+    elements.searchInput.addEventListener('keypress', handleSearchKeyPress);
+    
+    // Opciones de búsqueda
+    elements.searchByTitle.addEventListener('change', handleSearchOptionChange);
+    elements.searchByAuthor.addEventListener('change', handleSearchOptionChange);
+    elements.searchByGenre.addEventListener('change', handleSearchOptionChange);
 }
 
 /**
-
-Inicializa la aplicación
-*/
+ * Inicializa la aplicación
+ */
 function initApp() {
-loadInitialState();
-registerEventListeners();
-updateUI();
+    loadInitialState();
+    registerEventListeners();
+    updateUI();
 }
 
 // Ejecutar cuando el DOM esté listo
 if (document.readyState === 'loading') {
-document.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', initApp);
 } else {
-initApp();
+    initApp();
 }
